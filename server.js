@@ -6,7 +6,6 @@ const multer = require('multer')
 const { studentModel, instructorModel, courseModel, adminModel } = require('./Mongoose');
 
 const app = express()
-// const doc = new PDFDocument();
 
 mongoose.connect('mongodb://0.0.0.0:27017/lms')
     .then(() => { console.log("Mongodb is connected to the node js application") })
@@ -14,7 +13,6 @@ mongoose.connect('mongodb://0.0.0.0:27017/lms')
 
 
 app.use(express.json())
-// app.use(express.static('uploads'))
 
 
 // Register Endpoint for admin / student / instructor
@@ -89,7 +87,7 @@ app.post('/register', upload, async (req, resp) => {
             resp.status(200).send(`${username} register succesfully role is ${roles}`);
         }
     } catch (error) {
-        resp.status(404).send(error.message);
+        resp.status(500).send(error.message);
     }
 })
 
@@ -156,7 +154,7 @@ app.post('/login', async (req, resp) => {
         resp.end()
 
     } catch (error) {
-        resp.status(404).send(error.message)
+        resp.status(500).send(error.message)
     }
 })
 
@@ -209,7 +207,7 @@ const passwordReset = async (req, resp, next) => {
             resp.status(200).send("password reset succesffuly");
         }
     } catch (error) {
-        resp.status(404).send(error.message)
+        resp.status(500).send(error.message)
     }
 }
 
@@ -227,7 +225,7 @@ app.get('/admindashboard', async (req, resp) => {
         const findInstructor = await instructorModel.find()
         resp.status(200).json({ findStudent, findInstructor })
     } catch (error) {
-        resp.status(404).send("Error Occured while getting the student and instructor data form the database")
+        resp.status(500).send("Error Occured while getting the student and instructor data form the database")
     }
 })
 
@@ -239,7 +237,7 @@ app.get('/student', async (req, resp) => {
         const findCourse = await courseModel.find();
         resp.status(200).send(findCourse);
     } catch (error) {
-        resp.status(404).send(error.message)
+        resp.status(500).send(error.message)
     }
 })
 
@@ -254,10 +252,10 @@ app.get('/student/profile/:stdid', async (req, resp) => {
             resp.status(200).send("student not found")
         } else {
             const paidCourse = student.courses.filter(course => course.coursetype === coursetype);
-            resp.status(404).send(paidCourse)
+            resp.status(200).send(paidCourse)
         }
     } catch (error) {
-        console.log(error.message);
+        resp.status(500).send(error.message)
     }
 })
 
@@ -273,7 +271,7 @@ app.get('/student/searchcourse', async (req, resp) => {
         )
         resp.status(200).send(searchCourse)
     } catch (error) {
-        resp.status(404).send(error.message)
+        resp.status(500).send(error.message)
     }
 })
 
@@ -302,7 +300,7 @@ app.put('/course/:_id', async (req, resp) => {
             }
         }
     } catch (error) {
-        resp.status(404).send(error.message)
+        resp.status(500).send(error.message)
     }
 })
 
@@ -315,7 +313,7 @@ app.get('/instructor', async (req, resp) => {
         const findCourse = await courseModel.find();
         resp.status(200).send(findCourse)
     } catch (error) {
-        resp.status(404).send("Error while getting the data from the instructor server", error)
+        resp.status(500).send("Error while getting the data from the instructor server", error)
     }
 })
 
@@ -332,7 +330,7 @@ app.post('/instructor/publishcourse', async (req, resp) => {
         resp.status(200).json({ message: "Course has been successfully published" });
     }
     catch (err) {
-        resp.status(404).send(err.message)
+        resp.status(500).send(err.message)
     }
 })
 
@@ -342,12 +340,13 @@ app.post('/instructor/publishcourse', async (req, resp) => {
 app.get('/wishlist/:stdin', async (req, resp) => {
     try {
         const student = await studentModel.findById(req.params.stdin)
+
         if (!student) {
             resp.send("user invalid")
         }
         resp.status(200).send(student.wishlist)
     } catch (error) {
-        resp.status(404).send(error.message)
+        resp.status(500).send(error.message)
     }
 })
 
@@ -359,11 +358,11 @@ app.post('/wishlist/:stdid/:courseid', async (req, resp) => {
         const student = await studentModel.findById(req.params.stdid)
 
         student.wishlist.push(courseid)
-
         await student.save()
+
         resp.status(200).send(student)
     } catch (error) {
-        resp.status(404).json({ message: error.message })
+        resp.status(500).json({ message: error.message })
     }
 })
 
