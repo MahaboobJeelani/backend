@@ -6,6 +6,7 @@ const multer = require('multer')
 const { studentModel, instructorModel, courseModel, adminModel } = require('./Mongoose');
 
 const app = express()
+// const doc = new PDFDocument();
 
 mongoose.connect('mongodb://0.0.0.0:27017/lms')
     .then(() => { console.log("Mongodb is connected to the node js application") })
@@ -14,8 +15,6 @@ mongoose.connect('mongodb://0.0.0.0:27017/lms')
 
 app.use(express.json())
 // app.use(express.static('uploads'))
-
-
 
 
 // Register Endpoint for admin / student / instructor
@@ -66,7 +65,7 @@ app.post('/register', upload, async (req, resp) => {
                 }
                 const data = new adminModel({ username: username, email: email, password: hashPassword, roles: roles })
                 await data.save();
-                resp.send(`${username} register succesfully role is ${roles}`)
+                resp.status(200).send(`${username} register succesfully role is ${roles}`)
             })
 
         } else if (roles === 'student') {
@@ -78,7 +77,7 @@ app.post('/register', upload, async (req, resp) => {
                     const profile = req.file.filename
                     const studentData = new studentModel({ username: username, email: email, password: hashPassword, roles: roles, profile: profile })
                     await studentData.save();
-                    resp.send(`${username} register succesfully role is ${roles}`);
+                    resp.status(200).send(`${username} register succesfully role is ${roles}`);
 
                 }
             })
@@ -87,10 +86,10 @@ app.post('/register', upload, async (req, resp) => {
             createMail.sendMail(receiver);
             const instructorData = new instructorModel({ username: username, email: email, password: hashPassword, roles: roles })
             await instructorData.save();
-            resp.send(`${username} register succesfully role is ${roles}`);
+            resp.status(200).send(`${username} register succesfully role is ${roles}`);
         }
     } catch (error) {
-        resp.send(error.message);
+        resp.status(404).send(error.message);
     }
 })
 
@@ -157,7 +156,7 @@ app.post('/login', async (req, resp) => {
         resp.end()
 
     } catch (error) {
-        resp.send(error.message)
+        resp.status(404).send(error.message)
     }
 })
 
@@ -179,7 +178,7 @@ const passwordReset = async (req, resp, next) => {
             const updatedPassword = await adminModel.updateOne(
                 { "email": email }, { $set: { "password": comparePassword } }
             )
-            resp.send("password reset succesfully")
+            resp.status(200).send("password reset succesfully")
         }
 
         if (roles === 'student') {
@@ -193,7 +192,7 @@ const passwordReset = async (req, resp, next) => {
             const updatedPassword = await studentModel.updateOne(
                 { "email": email }, { "password": comparePassword }
             )
-            resp.send("password reset succesfully");
+            resp.status(200).send("password reset succesfully");
         }
 
         if (roles === 'instructor') {
@@ -207,7 +206,7 @@ const passwordReset = async (req, resp, next) => {
             const updatedPassword = await instructorModel.updateOne(
                 { "email": email }, { $set: { "password": comparePassword } }
             )
-            resp.send("password reset succesffuly");
+            resp.status(200).send("password reset succesffuly");
         }
     } catch (error) {
         resp.status(404).send(error.message)
@@ -226,9 +225,9 @@ app.get('/admindashboard', async (req, resp) => {
     try {
         const findStudent = await studentModel.find();
         const findInstructor = await instructorModel.find()
-        resp.json({ findStudent, findInstructor })
+        resp.status(200).json({ findStudent, findInstructor })
     } catch (error) {
-        resp.send("Error Occured while getting the student and instructor data form the database")
+        resp.status(404).send("Error Occured while getting the student and instructor data form the database")
     }
 })
 
@@ -238,9 +237,9 @@ app.get('/admindashboard', async (req, resp) => {
 app.get('/student', async (req, resp) => {
     try {
         const findCourse = await courseModel.find();
-        resp.send(findCourse);
+        resp.status(200).send(findCourse);
     } catch (error) {
-        resp.send("Error occured while getting the course data from the database")
+        resp.status(404).send(error.message)
     }
 })
 
@@ -252,10 +251,10 @@ app.get('/student/profile/:stdid', async (req, resp) => {
     try {
         const student = await studentModel.findById(req.params.stdid)
         if (!student) {
-            resp.send("student not found")
+            resp.status(200).send("student not found")
         } else {
             const paidCourse = student.courses.filter(course => course.coursetype === coursetype);
-            resp.send(paidCourse)
+            resp.status(404).send(paidCourse)
         }
     } catch (error) {
         console.log(error.message);
@@ -272,9 +271,9 @@ app.get('/student/searchcourse', async (req, resp) => {
                 coursename: { $regex: req.query.searchcourse, $options: 'i' }
             }
         )
-        resp.send(searchCourse)
+        resp.status(200).send(searchCourse)
     } catch (error) {
-        resp.send(error.message)
+        resp.status(404).send(error.message)
     }
 })
 
@@ -290,7 +289,7 @@ app.put('/course/:_id', async (req, resp) => {
         const pursesCourse = await courseModel.findById(req.params._id);
 
         if (!pursesCourse) {
-            resp.send("Course Not found")
+            resp.status(404).send("Course Not found")
         }
 
         else {
@@ -299,11 +298,11 @@ app.put('/course/:_id', async (req, resp) => {
                     { "_id": studentid },
                     { $push: { courses: { "courseid": req.params._id, "date": Date.now(), "coursetype": coursetype } } }
                 )
-                resp.send(`course has been sucessfully enrolled to the course id ${req.params._id}`);
+                resp.status(200).send(`course has been sucessfully enrolled to the course id ${req.params._id}`);
             }
         }
     } catch (error) {
-        resp.send("Error occured while adding the course")
+        resp.status(404).send(error.message)
     }
 })
 
@@ -314,9 +313,9 @@ app.put('/course/:_id', async (req, resp) => {
 app.get('/instructor', async (req, resp) => {
     try {
         const findCourse = await courseModel.find();
-        resp.send(findCourse)
+        resp.status(200).send(findCourse)
     } catch (error) {
-        resp.send("Error while getting the data from the instructor server", error)
+        resp.status(404).send("Error while getting the data from the instructor server", error)
     }
 })
 
@@ -333,7 +332,7 @@ app.post('/instructor/publishcourse', async (req, resp) => {
         resp.status(200).json({ message: "Course has been successfully published" });
     }
     catch (err) {
-        resp.send("Error While uploading the course", err)
+        resp.status(404).send(err.message)
     }
 })
 
@@ -346,9 +345,9 @@ app.get('/wishlist/:stdin', async (req, resp) => {
         if (!student) {
             resp.send("user invalid")
         }
-        resp.send(student.wishlist)
+        resp.status(200).send(student.wishlist)
     } catch (error) {
-        resp.send(error.message)
+        resp.status(404).send(error.message)
     }
 })
 
@@ -362,26 +361,28 @@ app.post('/wishlist/:stdid/:courseid', async (req, resp) => {
         student.wishlist.push(courseid)
 
         await student.save()
-        resp.send(student)
+        resp.status(200).send(student)
     } catch (error) {
-        resp.json({ message: error.message })
+        resp.status(404).json({ message: error.message })
     }
 })
 
 
 // Certication
 
-app.post('/certification', async (req, resp) => {
+app.post('/certification/:completed', async (req, resp) => {
     const { studentid, courseid } = req.body;
 
     try {
 
         const student = await studentModel.findById(studentid);
+
         if (!student) {
             return resp.status(404).send('Student not found');
         }
 
         const course = await courseModel.findById(courseid);
+
         if (!course) {
             return resp.status(404).send('Course not found');
         }
@@ -392,6 +393,10 @@ app.post('/certification', async (req, resp) => {
             return resp.status(404).send('Course not enrolled by the student');
         }
 
+        studentCourse.completed = req.params.completed
+
+        await studentCourse.save();
+
         if (!studentCourse.completed) {
             return resp.status(400).send('Course not completed yet');
         }
@@ -399,8 +404,10 @@ app.post('/certification', async (req, resp) => {
         resp.send({
             username: student.username,
             coursename: course.coursename,
-            date: studentCourse.date
+            date: new Date().toDateString()
         });
+
+
     } catch (error) {
         console.log(error.message);
         resp.status(500).send(error.message);
@@ -408,9 +415,8 @@ app.post('/certification', async (req, resp) => {
 });
 
 
-
 app.listen(8081, () => {
-    console.log("Server is running on the port no 8081")
+    console.log("Server is running on the port no 8081");
 })
 
 
