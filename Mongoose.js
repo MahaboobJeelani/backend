@@ -18,15 +18,15 @@ const courseSchema = new mongoose.Schema({
 const studentSchema = mongoose.Schema({
     username: { type: String, unique: true, required: true },
     email: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
+    password: { type: String, required : true},
     roles: { type: String, required: true },
     profile: { type: String },
     courses: [
         {
             courseid: { type: String },
-            date: { type: Date, default: Date.now() },
             coursetype: { type: String },
-            completed: { type: Boolean, default: false }
+            completed: { type: Boolean, default: true },
+            date: { type: Date, default: Date.now() }
         }
     ],
     wishlist: [courseSchema]
