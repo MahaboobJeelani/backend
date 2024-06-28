@@ -6,7 +6,6 @@ const multer = require('multer')
 const { studentModel, instructorModel, courseModel, adminModel } = require('./Mongoose');
 
 const app = express()
-// const doc = new PDFDocument();
 
 mongoose.connect('mongodb://0.0.0.0:27017/lms')
     .then(() => { console.log("Mongodb is connected to the node js application") })
